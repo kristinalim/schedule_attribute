@@ -1,0 +1,55 @@
+schedule_attribute
+==================
+
+Provides support to ActiveRecord for a Data Definition Language (DDL) specific
+to schedules.
+
+= Language
+
+A datetime pair comprised of the start datetime and end datetime is defined
+with two lines. At the moment, only one option is available.
+
+== Weekly Schedule
+
+  mon 09 00 ==> Monday, 7 AM
+  01 17 00  ==> Monday, 5 PM
+
+  1 00 00   ==> Monday, midnight
+  2 05 00   ==> Tuesday, 5 PM
+
+  5 09 00   ==> Friday, 9 AM
+  0 09 00   ==> Subday, 9 AM
+
+= General Usage
+
+== Installation
+
+You can install the plugin the traditional way. Go to your application root
+and do:
+
+  script/plugin install git://github.com/kristinalim/schedule_attribute.git
+
+== Specifying the Attributes for Schedule
+
+In your models, you can do:
+
+  class Person < ActiveRecord::Base
+    schedule_attribute :office_hours, :type => :weekly
+  end
+
+== Checking if a Datetime is Within the Schedule
+
+  person.within_schedule?(:weekly, :office_hours, Time.now)
+
+= License
+
+Written by Kristina Lim (http://i-think.com.ph/kristina/)
+
+Copyright (c) 2008 Syndeo Media
+http://syndeomedia.com
+
+= Contributing
+
+If you wish to contribute to the project, you may contact the author through:
+
+'kristinasyndeomediacom'.insert(8, '@').insert(20, '.')
