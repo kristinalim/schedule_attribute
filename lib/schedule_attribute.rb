@@ -1,3 +1,8 @@
+require "schedule_attribute/modes"
+require 'schedule_attribute/constants'
+require 'schedule_attribute/conversions'
+require 'schedule_attribute/validation'
+
 module ScheduleAttribute
   def self.included(base)
     base.extend(ClassMethods)
@@ -16,11 +21,18 @@ module ScheduleAttribute
 
       case type
       when :weekly:
-        schedules = parse_schedule(type, value)
+        schedules = Parser.parse_schedule(type, value)
         schedules.each { |schedule| result = within?(schedule[0], schedule[1], time_to_hash(type, time)) ; return true if result }
       end
 
       return false
+    end
+
+    def schedule_within_day(type, attribute, day)
+      schedules = read_schedule?(type, attribute)
+      schedules.each { |schedule| result = (schedule[0][:days] == day && schedule[0][:days] == schedule[1][:days]) ; return [schedule[0], schedule[1]] if result }
+
+      return nil
     end
 
     private
@@ -44,22 +56,6 @@ module ScheduleAttribute
       value_hash
     end
 
-    def parse_time(type, value)
-      value_hash = {}
-
-      case type
-      when :weekly:
-        matches = value.scan(Constants::FORMAT_EXPRESSIONS[type])
-        break if matches.blank?
-        matches = matches.first
-        value_hash[:days] = Conversions.to_day(matches.shift)
-        value_hash[:hours] = Conversions.to_hour(matches.shift)
-        value_hash[:minutes] = Conversions.to_minute(matches.shift)
-      end
-
-      value_hash
-    end
-
     def accummulate_time(value_hash)
       value = 0
       value += value_hash[:seconds].to_i * 1.second.to_i
@@ -74,31 +70,7 @@ module ScheduleAttribute
 
     def read_schedule?(type, attribute)
       value = send(attribute)
-      parse_schedule(type, value)
-    end
-
-    def parse_schedule(type, value)
-      value = String.new(value)
-      schedules = []
-
-      while (line = value.slice!(/\A[^\r\n]+[\r\n]*/))
-        start_time, end_time = [nil, nil]
-
-        unless line.to_s =~ Constants::FORMAT_EXPRESSIONS[type]
-          return schedules
-        else
-          start_time = parse_time(type, line)
-        end
-
-        line = value.slice!(/\A[^\r\n]+[\r\n]*/)
-        unless line =~ Constants::FORMAT_EXPRESSIONS[type]
-          return schedules
-        else
-          end_time = parse_time(type, line)
-        end
-        schedules << [start_time, end_time]
-      end
-      schedules
+      Parser.parse_schedule(type, value)
     end
   end
 end
