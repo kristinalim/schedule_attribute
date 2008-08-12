@@ -1,7 +1,7 @@
 module ScheduleAttribute
   class Conversions
     def self.to_day(value)
-      return value if value.to_i == value
+      return value.to_i if value.to_i.to_s == value
       return Constants::VALUE_HASH[:day][value] unless Constants::VALUE_HASH[:day][value].blank?
       return 0
     end
